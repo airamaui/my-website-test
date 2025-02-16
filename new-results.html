@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Results</title>
+</head>
+<body>
+  <h1>Your Submitted Answers</h1>
+  <div id="results"></div>
+
+  <button id="new-submission">Submit Another Answer</button>
+  <button id="save-edits">Save Changes</button>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      let latestSubmission = JSON.parse(localStorage.getItem('latestSubmission'));
+      const resultsDiv = document.getElementById('results');
+  
+      function displayLatestSubmission() {
+        resultsDiv.innerHTML = ''; // Clear previous results
+  
+        if (latestSubmission) {
+          const groupDiv = document.createElement('div');
+  
+          // Create an editable input for Submission Title
+          const titleInput = document.createElement('input');
+          titleInput.type = 'text';
+          titleInput.value = latestSubmission.title || `Latest Submission`;
+          titleInput.classList.add('submission-title');
+  
+          // Save title change when user types
+          titleInput.addEventListener('input', function () {
+            latestSubmission.title = this.value;
+            localStorage.setItem('latestSubmission', JSON.stringify(latestSubmission));
+          });
+  
+          groupDiv.appendChild(titleInput);
+          groupDiv.appendChild(document.createElement('br'));
+  
+          // Display Submission Date
+          const dateParagraph = document.createElement('p');
+          dateParagraph.textContent = `Submitted on: ${latestSubmission.date || "Unknown Date"}`;
+          groupDiv.appendChild(dateParagraph);
+  
+          // Display Answers
+          latestSubmission.answers.forEach((answer) => {
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = answer;
+            groupDiv.appendChild(input);
+            groupDiv.appendChild(document.createElement('br'));
+          });
+  
+          resultsDiv.appendChild(groupDiv);
+        } else {
+          resultsDiv.textContent = 'No recent submission found. Please submit answers first.';
+        }
+      }
+  
+      // Run function on page load
+      displayLatestSubmission();
+    });
+  </script>
+  

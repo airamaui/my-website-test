@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit & View Answers</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            margin: auto;
+        }
+        input, button {
+            width: 100%;
+            padding: 8px;
+            margin: 10px 0;
+            box-sizing: border-box;
+        }
+        button {
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+        }
+        .submit-btn {
+            background: #28a745;
+            color: white;
+        }
+        .submit-btn:hover {
+            background: #218838;
+        }
+        .view-results {
+            background: #007bff;
+            color: white;
+        }
+        .view-results:hover {
+            background: #0056b3;
+        }
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+        }
+        .delete-btn:hover {
+            background: #c82333;
+        }
+        #submittedResults {
+            margin-top: 20px;
+            padding: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Submit Your Answers</h2>
+        <input type="text" id="answer1" placeholder="Enter answer 1">
+        <input type="text" id="answer2" placeholder="Enter answer 2">
+        <input type="text" id="answer3" placeholder="Enter answer 3">
+        <input type="text" id="answer4" placeholder="Enter answer 4">
+        
+        <button class="submit-btn" onclick="submitAnswers()">Submit All Answers</button>
+        <button class="view-results" onclick="clearAllAnswers()">Clear All Answers</button>
+        <button class="view-results" onclick="window.location.href='results.html'">View All Submissions</button>
+    </div>
+
+    <div class="container" id="submittedResults" style="display: none;">
+        <h2>Submitted Answers</h2>
+        <div id="latestSubmission"></div>
+    </div>
+
+    <div class="container">
+        <h2>Search & Edit Submission</h2>
+        <input type="number" id="searchSubmission" placeholder="Enter submission number">
+        <button class="view-results" onclick="searchSubmission()">Search</button>
+        <div id="searchResults"></div>
+    </div>
+
+    <script>
+        function submitAnswers() {
+            let answer1 = document.getElementById("answer1").value;
+            let answer2 = document.getElementById("answer2").value;
+            let answer3 = document.getElementById("answer3").value;
+            let answer4 = document.getElementById("answer4").value;
+
+            if (!answer1 && !answer2 && !answer3 && !answer4) {
+                alert("Please enter at least one answer before submitting.");
+                return;
+            }
+
+            let storedAnswers = JSON.parse(localStorage.getItem('answers')) || [];
+
+            let newSubmission = {
+                title: `Submission ${storedAnswers.length + 1}`,
+                date: new Date().toLocaleString(),
+                answers: [answer1, answer2, answer3, answer4].filter(ans => ans)
+            };
+
+            storedAnswers.push(newSubmission);
+            localStorage.setItem('answers', JSON.stringify(storedAnswers));
+
+            displayLatestSubmission(newSubmission);
+
+            document.getElementById("answer1").value = "";
+            document.getElementById("answer2").value = "";
+            document.getElementById("answer3").value = "";
+            document.getElementById("answer4").value = "";
+        }
+
+        function displayLatestSubmission(submission) {
+            let latestSubmissionDiv = document.getElementById("latestSubmission");
+            let submittedResultsDiv = document.getElementById("submittedResults");
+
+            let submissionHtml = `
+                <h3>${submission.title}</h3>
+                <p><strong>Date:</strong> ${submission.date}</p>
+                <ul>
+                    ${submission.answers.map(answer => `<li>${answer}</li>`).join('')}
+                </ul>
+            `;
+
+            latestSubmissionDiv.innerHTML = submissionHtml;
+            submittedResultsDiv.style.display = "block";
+        }
+
+        function clearAllAnswers() {
+            if (confirm("Are you sure you want to delete all submissions?")) {
+                localStorage.removeItem('answers');
+                alert("All answers cleared.");
+                window.location.reload();
+            }
+        }
+
+        function searchSubmission() {
+            let submissionNumber = parseInt(document.getElementById("searchSubmission").value);
+            let storedAnswers = JSON.parse(localStorage.getItem('answers')) || [];
+            let searchResultsDiv = document.getElementById("searchResults");
+
+            searchResultsDiv.innerHTML = "";
+
+            if (isNaN(submissionNumber) || submissionNumber < 1 || submissionNumber > storedAnswers.length) {
+                searchResultsDiv.innerHTML = "<p>No submission found with that number.</p>";
+                return;
+            }
+
+            let submission = storedAnswers[submissionNumber - 1];
+
+            let resultHtml = `
+                <h3>Submission ${submissionNumber}</h3>
+                <label>Enter Answer 1 to Unlock:</label>
+                <input type="password" id="loginAnswer" placeholder="Enter Answer 1">
+                <button class="view-results" onclick="checkLogin(${submissionNumber - 1})">Unlock</button>
+                <div id="editSection" style="display:none;">
+                    <label>Title:</label>
+                    <input type="text" id="editTitle" value="${submission.title}" disabled>
+                    
+                    <label>Date:</label>
+                    <input type="datetime-local" id="editDate" value="${new Date(submission.date).toISOString().slice(0,16)}" disabled>
+                    
+                    <label>Answers:</label>
+                    <div id="editAnswers">
+                        ${submission.answers.map((answer, index) => `
+                            <input type="text" id="editAnswer${index}" value="${answer}" disabled>
+                        `).join('')}
+                    </div>
+
+                    <button class="submit-btn" id="saveButton" onclick="updateSubmission(${submissionNumber - 1})" style="display: none;">Save Changes</button>
+                </div>
+            `;
+
+            searchResultsDiv.innerHTML = resultHtml;
+        }
+
+        function checkLogin(index) {
+            let storedAnswers = JSON.parse(localStorage.getItem('answers')) || [];
+            let enteredAnswer = document.getElementById("loginAnswer").value;
+
+            if (storedAnswers[index].answers[0] === enteredAnswer) {
+                document.getElementById("editSection").style.display = "block";
+                enableEditing();
+            } else {
+                alert("Incorrect Answer 1! Cannot edit submission.");
+            }
+        }
+
+        function enableEditing() {
+            document.getElementById("editTitle").removeAttribute("disabled");
+            document.getElementById("editDate").removeAttribute("disabled");
+
+            let answerInputs = document.querySelectorAll("#editAnswers input");
+            answerInputs.forEach(input => input.removeAttribute("disabled"));
+
+            document.getElementById("saveButton").style.display = "block";
+        }
+
+        function updateSubmission(index) {
+            let storedAnswers = JSON.parse(localStorage.getItem('answers')) || [];
+            if (index < 0 || index >= storedAnswers.length) return;
+
+            let editedTitle = document.getElementById("editTitle").value;
+            let editedDate = document.getElementById("editDate").value;
+            let editedAnswers = [];
+
+            let answerInputs = document.querySelectorAll("#editAnswers input");
+            answerInputs.forEach(input => editedAnswers.push(input.value));
+
+            storedAnswers[index].title = editedTitle;
+            storedAnswers[index].date = new Date(editedDate).toLocaleString();
+            storedAnswers[index].answers = editedAnswers.filter(ans => ans);
+
+            localStorage.setItem('answers', JSON.stringify(storedAnswers));
+
+            alert("Submission updated successfully!");
+            window.location.reload();
+        }
+
+<link rel="stylesheet" href="style.css">
+<script src="script.js" defer></script>
+
+    </script>
+
+</body>
+</html>
