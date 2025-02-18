@@ -40,5 +40,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
       // Redirect to `new-results.html`
       window.location.href = 'new-results.html';
+
+
+    
+    document.getElementById("submitButton").addEventListener("click", function() {
+    console.log("Submit button clicked!"); // Debugging check
+});
+
+    
   });
 });
