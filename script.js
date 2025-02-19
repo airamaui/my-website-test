@@ -41,6 +41,11 @@ document.addEventListener("DOMContentLoaded", function () {
       // Redirect to `new-results.html`
       window.location.href = 'new-results.html';
 
+    
+
+    function submitAnswers() {
+    console.log("submitAnswers() function is working!");
+}
 
     
     document.getElementById("submitButton").addEventListener("click", function() {
