@@ -50,3 +50,12 @@ document.addEventListener("DOMContentLoaded", function () {
     
   });
 });
+
+alert("Javascript is working!");
+
+
+
+function submitAnswers() {
+    console.log("submitAnswers() function is working!");
+}
+
